@@ -4,7 +4,7 @@ End-to-end Deep Learning based celebrity face retrieval system using FaceNet/VGG
 
 ---
 
-# 🚀 Features
+# Features
 
 - Face Detection using MTCNN
 - Deep Face Embedding Extraction
@@ -18,7 +18,7 @@ End-to-end Deep Learning based celebrity face retrieval system using FaceNet/VGG
 
 ---
 
-# 🧠 Tech Stack
+# Tech Stack
 
 ## Deep Learning & Computer Vision
 - TensorFlow / Keras
@@ -39,55 +39,6 @@ End-to-end Deep Learning based celebrity face retrieval system using FaceNet/VGG
 - Pickle
 - Pandas
 
----
-
-# 📂 Project Architecture
-
-```bash
-Deepface-Similarity-Engine/
-│
-├── app/
-│   ├── streamlit_app.py
-│   ├── inference.py
-│   ├── similarity.py
-│   └── utils.py
-│
-├── models/
-│   ├── facenet_model.py
-│   ├── vggface_model.py
-│   └── mtcnn_detector.py
-│
-├── embeddings/
-│   ├── embeddings.pkl
-│   ├── image_paths.pkl
-│   └── celebrity_names.pkl
-│
-├── dataset/
-│   ├── raw/
-│   ├── processed/
-│   └── metadata.csv
-│
-├── scripts/
-│   ├── preprocess_images.py
-│   ├── generate_embeddings.py
-│   └── bulk_download.py
-│
-├── notebooks/
-│   ├── embedding_visualization.ipynb
-│   └── experiments.ipynb
-│
-├── deployment/
-│   ├── Dockerfile
-│   └── requirements.txt
-│
-├── api/
-│   └── fastapi_server.py
-│
-├── README.md
-└── LICENSE
-```
-
----
 
 # 🔥 How It Works
 
@@ -105,7 +56,7 @@ The celebrity with the highest similarity score is returned to the user.
 
 ---
 
-# 📊 Model Pipeline
+# Model Pipeline
 
 ```text
 Input Image
@@ -125,7 +76,7 @@ Top Celebrity Match
 
 ---
 
-# ⚙️ Installation
+# Installation
 
 ## Clone Repository
 
@@ -161,79 +112,34 @@ source venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
-
 ---
 
-# ▶️ Run Streamlit App
+# Run Streamlit App
 
 ```bash
 streamlit run app/streamlit_app.py
 ```
-
 ---
 
-# 🖼️ Dataset
+# Dataset
 
 - ~8000 celebrity images
 - 100+ Bollywood celebrities
 - Images resized to 224x224
+- Link (https://www.kaggle.com/datasets/sushilyadav1998/bollywood-celeb-localized-face-dataset)
 - Face embeddings precomputed and stored
 
 ---
 
-# 📈 Future Improvements
 
-- FAISS Vector Database Integration
-- ArcFace Embedding Model
-- Real-Time Webcam Inference
-- FastAPI Backend
-- Docker Deployment
-- AWS/GCP Deployment
-- Top-K Similarity Recommendations
-- Embedding Visualization using t-SNE
-- Multi-face Detection Support
 
----
-
-# 🧪 Concepts Covered
-
-- Deep Learning
-- Transfer Learning
-- Face Recognition
-- Computer Vision
-- Embedding Retrieval
-- Vector Similarity Search
-- Recommendation Systems
-- MLOps Fundamentals
-- Streamlit Deployment
-
----
-
-# 📌 Applications
-
-- Celebrity Look-Alike Systems
-- Face Recognition Systems
-- AI Recommendation Engines
-- Similarity Search Systems
-- Multimedia Retrieval Systems
-
----
-
-# 🤝 Contributing
-
-Contributions are welcome!
-
-Feel free to fork the repository and submit pull requests.
-
----
-
-# 📜 License
+# License
 
 This project is licensed under the MIT License.
 
 ---
 
-# 👨‍💻 Author
+# Author
 
 Umesh Ghaskata
 
