@@ -40,7 +40,7 @@ End-to-end Deep Learning based celebrity face retrieval system using FaceNet/VGG
 - Pandas
 
 
-# 🔥 How It Works
+# How It Works
 
 ## 1. Face Detection
 The uploaded image is processed using MTCNN to detect and crop the face region.
