@@ -130,17 +130,3 @@ streamlit run app/streamlit_app.py
 - Face embeddings precomputed and stored
 
 ---
-
-
-
-# License
-
-This project is licensed under the MIT License.
-
----
-
-# Author
-
-Umesh Ghaskata
-
-Graduate Student | Machine Learning Engineer | Deep Learning Enthusiast
