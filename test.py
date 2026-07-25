@@ -1,3 +1,4 @@
+import sitecustomize
 from keras_vggface.utils import preprocess_input
 from keras_vggface.vggface import VGGFace
 import numpy as np

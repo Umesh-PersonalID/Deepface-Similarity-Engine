@@ -112,12 +112,25 @@ source venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
+
+The repo includes a small `sitecustomize.py` shim so `keras-vggface` can run on the installed Keras 3 / TensorFlow 2.21 stack.
+---
+
+## Generate Embeddings
+
+If `embedding.pkl` and `filenames.pkl` are missing, first download the dataset images and generate the embeddings:
+
+```bash
+python data_downloader.py
+python feature_extractor.py
+```
+
 ---
 
 # Run Streamlit App
 
 ```bash
-streamlit run app/streamlit_app.py
+streamlit run app.py
 ```
 ---
 

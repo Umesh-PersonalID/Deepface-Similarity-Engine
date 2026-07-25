@@ -1,0 +1,87 @@
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap');
+
+  :root {
+    --bg-a: #f7f4ef;
+    --bg-b: #f3efe7;
+    --card: #fffaf2;
+    --ink: #1f2328;
+    --muted: #5f6773;
+    --accent: #ce6f31;
+    --accent-soft: rgba(206, 111, 49, 0.12);
+    --line: #eadfcd;
+  }
+
+  .hero-shell {
+    position: relative;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 1.2rem 1.2rem 1rem;
+    margin: 0.2rem 0 1rem;
+    background:
+      radial-gradient(1200px 220px at -10% -80%, rgba(206, 111, 49, 0.15), transparent 45%),
+      radial-gradient(900px 240px at 110% -120%, rgba(45, 126, 247, 0.08), transparent 45%),
+      linear-gradient(155deg, var(--bg-a), var(--bg-b));
+    overflow: hidden;
+  }
+
+  .hero-shell::after {
+    content: '';
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    right: -70px;
+    top: -70px;
+    border-radius: 999px;
+    border: 1px solid rgba(206, 111, 49, 0.25);
+    background: rgba(206, 111, 49, 0.06);
+  }
+
+  .hero-title {
+    margin: 0;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(1.45rem, 2.7vw, 2.2rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+
+  .hero-copy {
+    margin: 0.65rem 0 0;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.95rem;
+    color: var(--muted);
+    max-width: 680px;
+  }
+
+  .hero-chip-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-top: 0.9rem;
+  }
+
+  .hero-chip {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid rgba(206, 111, 49, 0.25);
+    border-radius: 999px;
+    padding: 0.28rem 0.66rem;
+    white-space: nowrap;
+  }
+</style>
+
+<section class="hero-shell" aria-label="App introduction">
+  <h1 class="hero-title">Which Bollywood celebrity are you?</h1>
+  <p class="hero-copy">
+    Upload a clear portrait and compare facial embeddings to find the closest celebrity match.
+  </p>
+  <div class="hero-chip-wrap">
+    <span class="hero-chip">Face detection</span>
+    <span class="hero-chip">Embedding match</span>
+    <span class="hero-chip">Instant prediction</span>
+  </div>
+</section>
