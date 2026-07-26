@@ -1,139 +1,249 @@
+import gc
+import pickle
+import os
 from pathlib import Path
 
 import sitecustomize
-from keras_vggface.utils import preprocess_input
-from keras_vggface.vggface import VGGFace
-import pickle
-from sklearn.metrics.pairwise import cosine_similarity
+
+# ----------------------------
+# TensorFlow optimizations
+# ----------------------------
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+
+import tensorflow as tf
+
+tf.config.threading.set_inter_op_parallelism_threads(1)
+tf.config.threading.set_intra_op_parallelism_threads(1)
+
 import streamlit as st
 from PIL import Image
-import os
-import cv2
-from mtcnn import MTCNN
 import numpy as np
+import cv2
+
+from mtcnn import MTCNN
+from keras_vggface.utils import preprocess_input
+from keras_vggface.vggface import VGGFace
+
+# ----------------------------
+# Paths
+# ----------------------------
+
+uploads_dir = Path("uploads")
+uploads_dir.mkdir(exist_ok=True)
+
+embeddings_path = Path("embedding.pkl")
+filenames_path = Path("filenames.pkl")
+ui_shell_path = Path("ui/landing_shell.html")
+
+# ----------------------------
+# Streamlit
+# ----------------------------
 
 st.set_page_config(
-    page_title='Celebrity face matcher',
-    layout='centered',
+    page_title="Celebrity Face Matcher",
+    layout="centered",
 )
 
-detector = MTCNN()
-model = VGGFace(model='resnet50',include_top=False,input_shape=(224,224,3),pooling='avg')
-uploads_dir = Path('uploads')
-uploads_dir.mkdir(exist_ok=True)
-embeddings_path = Path('embedding.pkl')
-filenames_path = Path('filenames.pkl')
-ui_shell_path = Path('ui/landing_shell.html')
-
+# ----------------------------
+# Cached resources
+# ----------------------------
 
 @st.cache_resource
+def load_model():
+    detector = MTCNN()
+
+    model = VGGFace(
+        model="resnet50",
+        include_top=False,
+        input_shape=(224, 224, 3),
+        pooling="avg",
+    )
+
+    return detector, model
+
+
+@st.cache_data
 def load_artifacts():
+
     if not embeddings_path.exists() or not filenames_path.exists():
         return None, None
 
-    with embeddings_path.open('rb') as file_handle:
-        feature_list = pickle.load(file_handle)
+    with open(embeddings_path, "rb") as f:
+        feature_list = np.asarray(
+            pickle.load(f),
+            dtype=np.float32,
+        )
 
-    with filenames_path.open('rb') as file_handle:
-        filenames = pickle.load(file_handle)
+    with open(filenames_path, "rb") as f:
+        filenames = pickle.load(f)
 
-    return np.asarray(feature_list), filenames
+    return feature_list, filenames
+
 
 def load_ui_shell():
     if ui_shell_path.exists():
-        return ui_shell_path.read_text(encoding='utf-8')
-    return ''
+        return ui_shell_path.read_text(encoding="utf-8")
+    return ""
+
+
+# ----------------------------
+# Utilities
+# ----------------------------
 
 def save_uploaded_image(uploaded_image):
+
     try:
-        with open(uploads_dir / uploaded_image.name,'wb') as f:
+        path = uploads_dir / Path(uploaded_image.name).name
+
+        with open(path, "wb") as f:
             f.write(uploaded_image.getbuffer())
-        return True
-    except:
-        return False
 
-def extract_features(img_path,model,detector):
-    img = cv2.imread(img_path)
-    results = detector.detect_faces(img)
+        return path
 
-    if not results:
+    except Exception:
         return None
 
-    x, y, width, height = results[0]['box']
-    x = max(x, 0)
-    y = max(y, 0)
-    width = max(width, 0)
-    height = max(height, 0)
 
-    face = img[y:y + height, x:x + width]
+def extract_features(img_path, model, detector):
 
-    #  extract its features
-    image = Image.fromarray(face)
-    image = image.resize((224, 224))
+    img = cv2.imread(str(img_path))
 
-    face_array = np.asarray(image)
+    if img is None:
+        return None
 
-    face_array = face_array.astype('float32')
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-    expanded_img = np.expand_dims(face_array, axis=0)
-    preprocessed_img = preprocess_input(expanded_img)
-    result = model.predict(preprocessed_img).flatten()
-    return result
+    detections = detector.detect_faces(img_rgb)
 
-def recommend(feature_list,features):
-    similarity = []
-    for i in range(len(feature_list)):
-        similarity.append(cosine_similarity(features.reshape(1, -1), feature_list[i].reshape(1, -1))[0][0])
+    if len(detections) == 0:
+        return None
 
-    index_pos = sorted(list(enumerate(similarity)), reverse=True, key=lambda x: x[1])[0][0]
-    return index_pos
+    x, y, w, h = detections[0]["box"]
+
+    x1 = max(x, 0)
+    y1 = max(y, 0)
+    x2 = min(x + w, img_rgb.shape[1])
+    y2 = min(y + h, img_rgb.shape[0])
+
+    if x2 <= x1 or y2 <= y1:
+        return None
+
+    face = img_rgb[y1:y2, x1:x2]
+
+    face = cv2.resize(face, (224, 224))
+
+    face = face.astype(np.float32)
+
+    face = np.expand_dims(face, axis=0)
+
+    face = preprocess_input(face)
+
+    embedding = model.predict(
+        face,
+        verbose=0,
+    ).flatten()
+
+    del img
+    del img_rgb
+    del face
+
+    gc.collect()
+
+    return embedding
+
+
+def recommend(feature_list, features):
+
+    features = features.astype(np.float32)
+
+    features /= np.linalg.norm(features) + 1e-10
+
+    normalized_database = feature_list / (
+        np.linalg.norm(feature_list, axis=1, keepdims=True) + 1e-10
+    )
+
+    similarity = normalized_database @ features
+
+    return int(np.argmax(similarity))
+
+
+# ----------------------------
+# Load resources
+# ----------------------------
+
+detector, model = load_model()
+
+feature_list, filenames = load_artifacts()
+
+if feature_list is None:
+    st.error(
+        "Missing embedding.pkl or filenames.pkl.\n\nRun data_downloader.py then feature_extractor.py."
+    )
+    st.stop()
+
+# ----------------------------
+# UI
+# ----------------------------
 
 st.html(load_ui_shell())
 
 with st.sidebar:
-    st.subheader('How it works', anchor=False)
-    st.markdown('- Upload a clear face image')
-    st.markdown('- We detect the face and extract features')
-    st.markdown('- We compare it with known celebrity embeddings')
-    st.caption('Tip: front-facing photos usually give better matches.')
+    st.subheader("How it works", anchor=False)
+    st.markdown("- Upload a clear face image")
+    st.markdown("- Detect the face")
+    st.markdown("- Extract facial embedding")
+    st.markdown("- Compare against celebrity embeddings")
 
-feature_list, filenames = load_artifacts()
 
-if feature_list is None or filenames is None:
-    st.error('Missing embedding.pkl or filenames.pkl. Run data_downloader.py, then feature_extractor.py, and restart Streamlit.')
-    st.stop()
+uploaded_image = st.file_uploader(
+    "Choose an image",
+    type=["jpg", "jpeg", "png", "webp", "avif"],
+)
 
-with st.container(border=True):
-    uploaded_image = st.file_uploader(
-        'Choose an image',
-        type=['jpg', 'jpeg', 'png', 'webp', 'avif'],
-        help='Supported formats: JPG, JPEG, PNG, WEBP, AVIF',
+if uploaded_image:
+
+    image_path = save_uploaded_image(uploaded_image)
+
+    if image_path is None:
+        st.error("Unable to save uploaded image.")
+        st.stop()
+
+    display_image = Image.open(uploaded_image)
+
+    with st.spinner("Finding closest celebrity..."):
+
+        features = extract_features(
+            image_path,
+            model,
+            detector,
+        )
+
+    if features is None:
+        st.error("No face detected.")
+        st.stop()
+
+    index = recommend(
+        feature_list,
+        features,
     )
 
-if uploaded_image is not None:
-    if save_uploaded_image(uploaded_image):
-        display_image = Image.open(uploaded_image)
+    actor = " ".join(
+        Path(filenames[index]).stem.split("_")
+    )
 
-        with st.spinner('Analyzing face and finding closest celebrity match...'):
-            features = extract_features(str(uploads_dir / uploaded_image.name),model,detector)
+    st.success("Match found!")
 
-        if features is None:
-            st.error('No face was detected in the uploaded image.')
-            st.stop()
+    col1, col2 = st.columns(2)
 
-        index_pos = recommend(feature_list,features)
-        predicted_actor = " ".join(Path(filenames[index_pos]).stem.split('_'))
+    with col1:
+        st.subheader("Uploaded Image")
+        st.image(display_image)
 
-        st.success('Match generated successfully.')
+    with col2:
+        st.subheader("Closest Match")
+        st.write(f"**{actor}**")
+        st.image(filenames[index], width=300)
 
-        col1,col2 = st.columns(2)
-
-        with col1:
-            st.subheader('Your uploaded image', anchor=False)
-            st.image(display_image)
-        with col2:
-            st.subheader('Closest match', anchor=False)
-            st.write(f'Seems like **{predicted_actor}**')
-            st.image(filenames[index_pos],width=300)
-    else:
-        st.error('Could not save the uploaded file. Please try again.')
+    del features
+    gc.collect()

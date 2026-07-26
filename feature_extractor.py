@@ -13,7 +13,12 @@ FILENAMES_PATH = Path('filenames.pkl')
 EMBEDDINGS_PATH = Path('embedding.pkl')
 IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png'}
 
-model = VGGFace(model='resnet50',include_top=False,input_shape=(224,224,3),pooling='avg')
+model = VGGFace(
+    model='resnet50',
+    include_top=False,
+    input_shape=(224,224,3),
+    pooling='avg',
+)
 
 def feature_extractor(img_path,model):
     img = load_img(img_path,target_size=(224,224))

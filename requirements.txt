@@ -1,9 +1,12 @@
-mtcnn
+mtcnn==1.0.0
 tensorflow==2.21.0
 keras==3.12.2
 keras-vggface==0.6
 keras_applications==1.0.8
-streamlit
+streamlit==1.60.0
 protobuf>=6.31.1,<8
-scikit-learn
-opencv-python
+scikit-learn==1.7.2
+opencv-python==5.0.0.93
+pillow==12.3.0
+tqdm==4.67.1
+bing-image-downloader==1.1.2
