@@ -1,8 +1,6 @@
 mtcnn==1.0.0
-tensorflow
-keras
+tensorflow==2.15.1
 deepface
-tf-keras
 streamlit==1.60.0
 protobuf>=6.31.1,<8
 scikit-learn==1.7.2
