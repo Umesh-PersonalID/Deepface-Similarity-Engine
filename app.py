@@ -22,8 +22,7 @@ import numpy as np
 import cv2
 
 from mtcnn import MTCNN
-from keras_vggface.utils import preprocess_input
-from keras_vggface.vggface import VGGFace
+from deepface import DeepFace
 
 # ----------------------------
 # Paths
@@ -50,15 +49,7 @@ st.set_page_config(
 @st.cache_resource
 def load_model():
     detector = MTCNN()
-
-    model = VGGFace(
-        model="resnet50",
-        include_top=False,
-        input_shape=(224, 224, 3),
-        pooling="avg",
-    )
-
-    return detector, model
+    return detector
 
 
 @st.cache_data
@@ -92,7 +83,7 @@ def load_ui_shell():
 
 
 
-def extract_features(image_bytes, model, detector):
+def extract_features(image_bytes, detector):
 
     img_array = np.frombuffer(image_bytes, np.uint8)
     img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
@@ -117,20 +108,15 @@ def extract_features(image_bytes, model, detector):
     if x2 <= x1 or y2 <= y1:
         return None
 
-    face = img_rgb[y1:y2, x1:x2]
-
-    face = cv2.resize(face, (224, 224))
-
-    face = face.astype(np.float32)
-
-    face = np.expand_dims(face, axis=0)
-
-    face = preprocess_input(face)
-
-    embedding = model.predict(
-        face,
-        verbose=0,
-    ).flatten()
+    face = img[y1:y2, x1:x2]
+    # DeepFace expects BGR for numpy array internally when finding model, but since it's already cropped we pass it directly.
+    # Actually it's better to pass it to DeepFace natively
+    representation = DeepFace.represent(
+        img_path=face,
+        model_name="Facenet",
+        enforce_detection=False
+    )
+    embedding = np.array(representation[0]["embedding"])
 
     del img
     del img_rgb
@@ -160,7 +146,7 @@ def recommend(feature_list, features):
 # Load resources
 # ----------------------------
 
-detector, model = load_model()
+detector = load_model()
 
 feature_list, filenames = load_artifacts()
 
@@ -197,7 +183,6 @@ if uploaded_image:
 
         features = extract_features(
             uploaded_image.getvalue(),
-            model,
             detector,
         )
 

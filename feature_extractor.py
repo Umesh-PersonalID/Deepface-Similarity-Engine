@@ -1,8 +1,7 @@
 from pathlib import Path
 
 import sitecustomize
-from keras_vggface.utils import preprocess_input
-from keras_vggface.vggface import VGGFace
+from deepface import DeepFace
 from keras.utils import img_to_array, load_img
 import numpy as np
 import pickle
@@ -13,22 +12,14 @@ FILENAMES_PATH = Path('filenames.pkl')
 EMBEDDINGS_PATH = Path('embedding.pkl')
 IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png'}
 
-model = VGGFace(
-    model='resnet50',
-    include_top=False,
-    input_shape=(224,224,3),
-    pooling='avg',
-)
-
-def feature_extractor(img_path,model):
-    img = load_img(img_path,target_size=(224,224))
-    img_array = img_to_array(img)
-    expanded_img = np.expand_dims(img_array,axis=0)
-    preprocessed_img = preprocess_input(expanded_img)
-
-    result = model.predict(preprocessed_img).flatten()
-
-    return result
+def feature_extractor(img_path):
+    # Instead of default (VGG-Face)
+    representation = DeepFace.represent(
+        img_path=str(img_path),
+        model_name="Facenet",
+        enforce_detection=False
+    )
+    return representation[0]["embedding"]
 
 def build_filenames(dataset_dir):
     filenames = sorted(
@@ -54,7 +45,7 @@ if __name__ == '__main__':
     features = []
 
     for file in tqdm(filenames):
-        features.append(feature_extractor(file,model))
+        features.append(feature_extractor(file))
 
     with EMBEDDINGS_PATH.open('wb') as file_handle:
         pickle.dump(features, file_handle)
