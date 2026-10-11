@@ -27,24 +27,28 @@ if keras is not None:
             return name.replace("/", "_")
         return name
 
-    from keras.src.layers import layer as keras_layer_module
-    from keras.src.ops import operation as keras_operation_module
+    if getattr(keras, "__version__", "").startswith("3"):
+        try:
+            from keras.src.layers import layer as keras_layer_module
+            from keras.src.ops import operation as keras_operation_module
 
-    original_layer_init = keras_layer_module.Layer.__init__
+            original_layer_init = keras_layer_module.Layer.__init__
 
-    def patched_layer_init(self, *args, **kwargs):
-        if "name" in kwargs:
-            kwargs["name"] = _sanitize_keras_name(kwargs["name"])
-        return original_layer_init(self, *args, **kwargs)
+            def patched_layer_init(self, *args, **kwargs):
+                if "name" in kwargs:
+                    kwargs["name"] = _sanitize_keras_name(kwargs["name"])
+                return original_layer_init(self, *args, **kwargs)
 
-    keras_layer_module.Layer.__init__ = patched_layer_init
+            keras_layer_module.Layer.__init__ = patched_layer_init
 
-    original_operation_init = keras_operation_module.Operation.__init__
+            original_operation_init = keras_operation_module.Operation.__init__
 
-    def patched_operation_init(self, name=None):
-        return original_operation_init(self, name=_sanitize_keras_name(name))
+            def patched_operation_init(self, name=None):
+                return original_operation_init(self, name=_sanitize_keras_name(name))
 
-    keras_operation_module.Operation.__init__ = patched_operation_init
+            keras_operation_module.Operation.__init__ = patched_operation_init
+        except (ImportError, AttributeError):
+            pass
 
     if "keras.utils.data_utils" not in sys.modules:
         data_utils = _install_module("keras.utils.data_utils")
