@@ -29,8 +29,6 @@ from keras_vggface.vggface import VGGFace
 # Paths
 # ----------------------------
 
-uploads_dir = Path("uploads")
-uploads_dir.mkdir(exist_ok=True)
 
 embeddings_path = Path("embedding.pkl")
 filenames_path = Path("filenames.pkl")
@@ -91,23 +89,13 @@ def load_ui_shell():
 # Utilities
 # ----------------------------
 
-def save_uploaded_image(uploaded_image):
-
-    try:
-        path = uploads_dir / Path(uploaded_image.name).name
-
-        with open(path, "wb") as f:
-            f.write(uploaded_image.getbuffer())
-
-        return path
-
-    except Exception:
-        return None
 
 
-def extract_features(img_path, model, detector):
 
-    img = cv2.imread(str(img_path))
+def extract_features(image_bytes, model, detector):
+
+    img_array = np.frombuffer(image_bytes, np.uint8)
+    img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
 
     if img is None:
         return None
@@ -203,18 +191,12 @@ uploaded_image = st.file_uploader(
 
 if uploaded_image:
 
-    image_path = save_uploaded_image(uploaded_image)
-
-    if image_path is None:
-        st.error("Unable to save uploaded image.")
-        st.stop()
-
     display_image = Image.open(uploaded_image)
 
     with st.spinner("Finding closest celebrity..."):
 
         features = extract_features(
-            image_path,
+            uploaded_image.getvalue(),
             model,
             detector,
         )
